@@ -1,0 +1,24 @@
+/* --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace; */
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.form-label {
+  font-weight: 700;
+  font-size: large;
+}
+
+.order-table tbody td, .custom-table tbody td {
+  min-width: 100px;
+  white-space: nowrap;
+}

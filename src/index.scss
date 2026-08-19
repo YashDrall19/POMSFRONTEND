@@ -1,0 +1,41 @@
+// src/custom-bootstrap.scss
+
+// Override Bootstrap variables BEFORE importing Bootstrap
+
+// Professional Enterprise CRM Theme
+
+$primary: #1e3a5f;     // Deep enterprise blue
+$secondary: #6b7280;   // Cool gray
+$success: #0f766e;     // Professional teal-green
+$info: #2563eb;        // Clean blue
+$warning: #d97706;     // Muted amber
+$danger: #b91c1c;      // Serious soft red
+$light: #f3f4f6;       // Very light gray
+$dark: #111827;        // Slate black
+
+// App background & typography
+$body-bg: #f5f7fb;     // Soft dashboard background
+$body-color: #1f2937;  // Neutral dark gray text
+
+// Optional UI improvements
+$border-radius: 0.5rem;
+$btn-border-radius: 0.45rem;
+$card-border-radius: 0.75rem;
+
+// Better borders
+$border-color: #e5e7eb;
+
+// Navbar
+$navbar-dark-bg: #1e293b;
+$navbar-light-bg: #ffffff;
+
+// Tables
+$table-striped-bg: #f9fafb;
+$table-hover-bg: #eef2ff;
+
+// Links
+$link-color: #2563eb;
+$link-hover-color: #1d4ed8;
+
+// Import Bootstrap
+@import "bootstrap/scss/bootstrap";

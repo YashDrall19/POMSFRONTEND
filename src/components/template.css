@@ -1,0 +1,50 @@
+.po-container{
+    background:white;
+    padding:40px;
+    width:210mm;
+    min-height:297mm;
+    margin:auto;
+    /* border:1px solid #ddd; */
+    font-size:13px;
+}
+
+.po-container h2 {
+    text-align: center;
+}
+
+.po-header{
+    display:flex;
+    justify-content:space-between;
+}
+
+.po-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.po-table td,
+.po-table th{
+    border:1px solid black;
+    padding:8px;
+}
+
+.billing {
+    display: flex;
+    justify-content: space-between;
+}
+
+.address {
+    flex-basis: 48%;
+    padding: 10px;
+    border: 1px solid rgb(204, 204, 204);
+    border-radius: 16px;
+}
+
+p {
+    /* margin-bottom: 4px; */
+    margin: 0;
+}
+
+/* .purchase {
+    display: ;
+} */
