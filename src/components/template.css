@@ -8,6 +8,13 @@
     font-size:13px;
 }
 
+@media print {
+    .po-container:not(:last-child) {
+        break-after: page;
+        page-break-after: always;
+    }
+}
+
 .po-container h2 {
     text-align: center;
 }

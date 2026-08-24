@@ -11,7 +11,7 @@ import InvoiceTemplate from '../../components/InvoiceTemplate';
 
 export default function InvoiceReports() {
   const dispatch = useDispatch();
-  const {refreshUser} = useContext(AuthContext);
+  const { user, refreshUser } = useContext(AuthContext);
 
   useEffect(() => {
     refreshUser();
@@ -350,6 +350,7 @@ export default function InvoiceReports() {
         headers={headers}
         data={invoices}
         loading={loading}
+        user={user}
         actionButton={<ExportExcel tableId="All Invoices" />}
         actionHeaders={["Actions"]}
         actionCells={(row) => [
@@ -384,7 +385,9 @@ export default function InvoiceReports() {
         content={
           <div>
             <div className="modal-body" ref={invoiceRef}>
-              <InvoiceTemplate data={piv} invoices={invoices} />
+              <InvoiceTemplate data={piv} invoices={invoices} copyLabel="Original Copy for Recipient" />
+              <InvoiceTemplate data={piv} invoices={invoices} copyLabel="Duplicate Copy for Carrier" />
+              <InvoiceTemplate data={piv} invoices={invoices} copyLabel="Triplicate Copy for Supplier" />
             </div>
             <div className="modal-footer">
               <button className='btn btn-primary' onClick={downloadInvoice}>Print</button>

@@ -1,9 +1,10 @@
-import React from 'react'
 import { ToWords } from "to-words";
-import { getFormattedDate, getFormattedDateDot } from '../utils/DateTime';
+import { getFormattedDateDot } from '../utils/DateTime';
+import { formatOrderAmount, getLineTotal, getOrderTotals } from '../utils/orderTotals';
 
 export default function Quotation({data}) {
 	console.log(data)
+	const { totalPrice, specialDiscount, grandTotal } = getOrderTotals(data);
 
 	const amountToWords = (amount, country = "IN") => {
 		if (!amount) {
@@ -210,7 +211,7 @@ export default function Quotation({data}) {
 								<td>Quantity</td>
 								<td>Rate</td>
 								<td>GST</td>
-								<td>Discount</td>
+										<td>Discount %</td>
 								<td>Per</td>
 								<td>Amount</td>
 							</tr>
@@ -239,9 +240,9 @@ export default function Quotation({data}) {
 										<td>{d?.qty}</td>
 										<td>{d?.price}</td>
 										<td>{d?.gst}</td>
-										<td>{d?.discount}</td>
+										<td>{d?.discount || 0}%</td>
 										<td>No</td>
-										<td><strong>{d?.qty * d?.price + ((d?.gst * d?.price)/100) - d?.discount}</strong></td>
+										<td><strong>{formatOrderAmount(getLineTotal(d), data?.currency)}</strong></td>
 									</tr>
 								)
 							})}
@@ -287,29 +288,9 @@ export default function Quotation({data}) {
 								<td></td>
 							</tr> */}
 
-							<tr>
-								<td colSpan={6} className="text-end">
-									<strong>Total</strong>
-								</td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td>
-									<strong>
-										{data?.items?.reduce((total, item) => {
-											const qty = Number(item?.qty || 0);
-											const price = Number(item?.price || 0);
-											const gst = Number(item?.gst || 0);
-											const discount = Number(item?.discount || 0);
-
-											return total + (qty * price) + ((gst * price) / 100) - discount;
-										}, 0)}
-									</strong>
-								</td>
-							</tr>
+							<tr><td colSpan={12} className="text-end"><strong>Subtotal</strong></td><td><strong>{formatOrderAmount(totalPrice, data?.currency)}</strong></td></tr>
+							<tr><td colSpan={12} className="text-end"><strong>Special Discount</strong></td><td><strong>- {formatOrderAmount(specialDiscount, data?.currency)}</strong></td></tr>
+							<tr><td colSpan={12} className="text-end"><strong>Grand Total</strong></td><td><strong>{formatOrderAmount(grandTotal, data?.currency)}</strong></td></tr>
 
 							<tr>
 								<td colSpan={6}>Amount Chargeable (in words)</td>
@@ -318,13 +299,7 @@ export default function Quotation({data}) {
 
 							<tr>
 								<td colSpan={6}><strong>
-									{amountToWords(
-										data?.items?.reduce(
-											(total, item) =>
-												total + (Number(item?.qty || 0) * Number(item?.price || 0)),
-											0
-										)
-									)}
+									{amountToWords(grandTotal)}
 								</strong></td>
 								<td>Company's Bank Details</td>
 								<td></td>

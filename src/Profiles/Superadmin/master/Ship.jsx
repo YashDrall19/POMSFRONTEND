@@ -141,6 +141,7 @@ export default function Ship() {
 				headers={headers}
 				data={data}
 				loading={loading}
+				user={user}
 				actionButton={<ExportExcel tableId="Shipping" />}
 				actionHeaders={["Actions"]}
 				actionCells={(row) => [

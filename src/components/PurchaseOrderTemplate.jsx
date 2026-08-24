@@ -1,23 +1,10 @@
-import { useRef } from "react";
 import "./template.css";
-import { useReactToPrint } from "react-to-print";
 import logo from "../../public/pivlogo.png";
 import { ToWords } from "to-words";
+import { formatOrderAmount, getLineTotal, getOrderTotals } from "../utils/orderTotals";
 
 
 export default function PurchaseOrderTemplate({ data }) {
-
-  const getLineTotal = (item) => {
-    const qty = Number(item.qty || 0);
-    const price = Number(item.price || 0);
-    const gst = Number(item.gst || 0);
-    const discount = Number(item.discount || 0);
-
-    const lineTotal = qty * price;
-    const gstAmount = (lineTotal * gst) / 100;
-
-    return lineTotal + gstAmount - discount;
-  };
 
   const amountToWords = (amount, country = "IN") => {
     if (!amount) {
@@ -68,11 +55,7 @@ export default function PurchaseOrderTemplate({ data }) {
     return toWords.convert(amount);
   };
 
-  const grandTotal =
-    data?.items?.reduce(
-      (sum, item) => sum + getLineTotal(item),
-      0
-    );
+  const { totalPrice, specialDiscount, grandTotal } = getOrderTotals(data);
 
   const getFormattedDate = (dateTime) => {
     const date = new Date(dateTime);
@@ -124,7 +107,7 @@ export default function PurchaseOrderTemplate({ data }) {
             <tbody>
               <tr>
                 <td className="text-center p-1">{data?.po_number}</td>
-                <td className="text-center p-1">{getFormattedDate(new Date())}</td>
+                <td className="text-center p-1">{getFormattedDate(data?.created_at || new Date())}</td>
               </tr>
             </tbody>
           </table>
@@ -210,7 +193,7 @@ export default function PurchaseOrderTemplate({ data }) {
 
                 <td>{item.price}</td>
                 <td>{item.gst}%</td>
-                <td>{item.discount}</td>
+                <td>{item.discount || 0}%</td>
 
                 <td>{total.toFixed(2)}</td>
               </tr>
@@ -218,31 +201,16 @@ export default function PurchaseOrderTemplate({ data }) {
 
           })}
 
-          <tr>
-            <td colSpan="7" className="text-end">
-              <strong>Sub Total</strong>
-            </td>
-
-            <td>
-              <strong>
-                {grandTotal?.toFixed(2)}
-              </strong>
-            </td>
-          </tr>
+          <tr><td colSpan="7" className="text-end"><strong>Subtotal</strong></td><td><strong>{formatOrderAmount(totalPrice, data?.currency)}</strong></td></tr>
+          <tr><td colSpan="7" className="text-end"><strong>Special Discount</strong></td><td><strong>- {formatOrderAmount(specialDiscount, data?.currency)}</strong></td></tr>
           <tr>
             <td colSpan="6">
               <strong>
-                {amountToWords(grandTotal?.toFixed(2))}
+                {amountToWords(grandTotal)}
               </strong>
             </td>
-            <td className="text-end">
-              <strong>Total</strong>
-            </td>
-            <td>
-              <strong>
-                {grandTotal?.toFixed(2)}
-              </strong>
-            </td>
+            <td className="text-end"><strong>Grand Total</strong></td>
+            <td><strong>{formatOrderAmount(grandTotal, data?.currency)}</strong></td>
           </tr>
 
         </tbody>
@@ -267,4 +235,3 @@ export default function PurchaseOrderTemplate({ data }) {
     </div>
   )
 }
-

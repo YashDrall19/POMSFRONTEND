@@ -1,23 +1,10 @@
-import { useRef } from "react";
 import "./template.css";
-import { useReactToPrint } from "react-to-print";
 import logo from "../../public/pivlogo.png";
 import { ToWords } from "to-words";
+import { formatOrderAmount, getLineTotal, getOrderTotals } from "../utils/orderTotals";
 
 
-export default function InvoiceTemplate({ data, invoices }) {
-
-  const getLineTotal = (item) => {
-    const qty = Number(item.qty || 0);
-    const price = Number(item.price || 0);
-    const gst = Number(item.gst || 0);
-    const discount = Number(item.discount || 0);
-
-    const lineTotal = qty * price;
-    const gstAmount = (lineTotal * gst) / 100;
-
-    return lineTotal + gstAmount - discount;
-  };
+export default function InvoiceTemplate({ data, invoices, copyLabel = "Original Copy for Recipient" }) {
 
   const amountToWords = (amount, country = "IN") => {
     if (!amount) {
@@ -68,11 +55,7 @@ export default function InvoiceTemplate({ data, invoices }) {
     return toWords.convert(amount);
   };
 
-  const grandTotal =
-    data?.items?.reduce(
-      (sum, item) => sum + getLineTotal(item),
-      0
-    );
+  const { totalPrice, specialDiscount, grandTotal } = getOrderTotals(data);
 
   const getFormattedDate = (dateTime) => {
     const date = new Date(dateTime);
@@ -124,7 +107,7 @@ export default function InvoiceTemplate({ data, invoices }) {
             <tbody>
               <tr>
                 <td className="text-center p-1">{invoices?.find(i => i?.po_number === data?.po_number)?.invoice_number}</td>
-                <td className="text-center p-1">{getFormattedDate(new Date())}</td>
+                <td className="text-center p-1">{getFormattedDate(data?.created_at || new Date())}</td>
               </tr>
             </tbody>
           </table>
@@ -210,7 +193,7 @@ export default function InvoiceTemplate({ data, invoices }) {
 
                 <td>{item.price}</td>
                 <td>{item.gst}%</td>
-                <td>{item.discount}</td>
+                <td>{item.discount || 0}%</td>
 
                 <td>{total.toFixed(2)}</td>
               </tr>
@@ -218,31 +201,16 @@ export default function InvoiceTemplate({ data, invoices }) {
 
           })}
 
-          <tr>
-            <td colSpan="7" className="text-end">
-              <strong>Sub Total</strong>
-            </td>
-
-            <td>
-              <strong>
-                {grandTotal?.toFixed(2)}
-              </strong>
-            </td>
-          </tr>
+          <tr><td colSpan="7" className="text-end"><strong>Subtotal</strong></td><td><strong>{formatOrderAmount(totalPrice, data?.currency)}</strong></td></tr>
+          <tr><td colSpan="7" className="text-end"><strong>Special Discount</strong></td><td><strong>- {formatOrderAmount(specialDiscount, data?.currency)}</strong></td></tr>
           <tr>
             <td colSpan="6">
               <strong>
-                {amountToWords(grandTotal?.toFixed(2))}
+                {amountToWords(grandTotal)}
               </strong>
             </td>
-            <td className="text-end">
-              <strong>Total</strong>
-            </td>
-            <td>
-              <strong>
-                {grandTotal?.toFixed(2)}
-              </strong>
-            </td>
+            <td className="text-end"><strong>Grand Total</strong></td>
+            <td><strong>{formatOrderAmount(grandTotal, data?.currency)}</strong></td>
           </tr>
 
         </tbody>
@@ -261,7 +229,35 @@ export default function InvoiceTemplate({ data, invoices }) {
         </div>
       </div>
 
+
+      <div className="bank_details mt-3">
+        <table className="table table-bordered">
+          <tbody>
+            <tr>
+              <td colSpan={2} className="text-center"><strong>Bank Details for Customers</strong></td>
+            </tr>
+            <tr>
+              <td>
+                <p>HDFC Bank Ltd.</p>
+                <p>A/C No.-01582320004506</p>
+                <p>IFSC-HDFC0000158</p>
+              </td>
+              <td>
+                <p>State Bank of India</p>
+                <p>A/C no.64061689117</p>
+                <p>IFSC-SBIN0017983</p>
+              </td>
+            </tr>
+            <tr>
+              <td colSpan={2} className="text-center"><strong>For UPI/Credit Card:- https://lifetechindia.com/payments.php</strong></td>
+            </tr>
+            <tr><td colSpan={2} className="text-center">{copyLabel}</td></tr>
+          </tbody>
+        </table>
+      </div>
+
       <p className="mt-4 text-center">Quotation Reference Number: {data?.po_number}</p>
+      <p className="mt-4 text-center">Research Use Only Remark</p>
 
       {/* <div className="d-flex justify-content-end">
         <button className="btn btn-primary" onClick={handlePrint}>Save as PDF</button>
@@ -269,4 +265,3 @@ export default function InvoiceTemplate({ data, invoices }) {
     </div>
   )
 }
-

@@ -261,6 +261,7 @@ export default function Company() {
 				headers={headers}
 				data={data}
 				loading={loading}
+				user={user}
 				actionButton={<ExportExcel tableId="Companies" />}
 				actionHeaders={["Actions"]}
 				actionCells={(row) => [

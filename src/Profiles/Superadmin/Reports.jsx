@@ -138,6 +138,7 @@ export default function Reports() {
 			...(fields?.employee && {punched_by__employee_code: fields?.employee}),
 			...(fields?.po_status && {po_status: fields?.po_status}),
 			...(fields?.mr_status && {mr_status: fields?.mr_status}),
+			...(fields?.product_name && {items__contains: [{label: fields?.product_name}]}),
 		};
 
 		setLoading(true);
@@ -462,6 +463,30 @@ export default function Reports() {
 						</select>
 					</div>
 
+					<div className="col-md-6 mb-3">
+						<label className='form-label m-0'>Product Name / Item Code / Description</label>
+						<input 
+							type="text" 
+							className='form-control'
+							name='product_name'
+							value={fields?.product_name || ""}
+							onChange={handleChange}
+							placeholder='Product Name'
+						/>
+					</div>
+
+					{/* <div className="col-md-3 mb-3">
+						<label className='form-label m-0'>Catalog Number</label>
+						<input 
+							type="text" 
+							className='form-control'
+							name='catalog_number'
+							value={fields?.catalog_number || ""}
+							onChange={handleChange}
+							placeholder='Catalog Number'
+						/>
+					</div> */}
+
 					{/* <div className="col-md-3 mb-3">
 						<label className='form-label m-0'>MR Status</label>
 						<select
@@ -489,6 +514,7 @@ export default function Reports() {
 				headers={headers}
 				data={orders}
 				loading={loading}
+				user={user}
 				actionButton={<ExportExcel tableId="All Quotations" />}
 				actionHeaders={["Actions"]}
 				actionCells={(row) => [
@@ -508,7 +534,7 @@ export default function Reports() {
 
 			<Modal 
 				showModal={showModal}
-				title="Quotation Invoice"
+				title="Quotation"
 				// size='xl'
 				onclose={() => setShowModal(false)}
 				content={
@@ -575,7 +601,9 @@ export default function Reports() {
 				content={
 					<div>
 						<div className="modal-body" ref={invoiceRef}>
-							<InvoiceTemplate data={piv} invoices={invoices} />
+							<InvoiceTemplate data={piv} invoices={invoices} copyLabel="Original Copy for Recipient" />
+							<InvoiceTemplate data={piv} invoices={invoices} copyLabel="Duplicate Copy for Carrier" />
+							<InvoiceTemplate data={piv} invoices={invoices} copyLabel="Triplicate Copy for Supplier" />
 						</div>
 						<div className="modal-footer">
 							<button className='btn btn-primary' onClick={downloadInvoice}>Print</button>

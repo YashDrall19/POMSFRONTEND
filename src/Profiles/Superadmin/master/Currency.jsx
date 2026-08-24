@@ -123,6 +123,7 @@ export default function Currency() {
 				headers={headers}
 				data={data}
 				loading={loading}
+				user={user}
 				actionButton={<ExportExcel tableId="Currency" />}
 				actionHeaders={["Actions"]}
 				actionCells={(row) => [

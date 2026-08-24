@@ -253,7 +253,10 @@ export default function Layout({ basePath = '' }) {
                     <div style={{ maxHeight: isOpen ? `${item.children.length * 52}px` : '0px', overflow: 'hidden', transition: 'max-height 0.3s ease' }}>
                       <div className="bg-black">
                         {item.children.map((child) => {
-                          if (user?.role !== "ADMIN" && child?.id === "user") {
+                          if (
+                            user?.role !== "ADMIN" &&
+                            ["users", "po_status"].includes(child?.id)
+                          ) {
                             return;
                           }
                           return (

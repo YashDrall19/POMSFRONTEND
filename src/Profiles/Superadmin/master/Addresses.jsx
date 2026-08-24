@@ -127,6 +127,7 @@ export default function Addresses() {
 				headers={headers}
 				data={data}
 				loading={loading}
+				user={user}
 				actionButton={<ExportExcel tableId="Address" />}
 				actionHeaders={["Actions"]}
 				actionCells={(row) => [

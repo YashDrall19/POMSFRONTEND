@@ -357,6 +357,7 @@ export default function MRStatus() {
 				headers={headers}
 				data={orders}
 				loading={loading}
+				user={user}
 				actionButton={<ExportExcel tableId="Approved Invoices" />}
 				actionHeaders={["Actions"]}
 				actionCells={(row) => [

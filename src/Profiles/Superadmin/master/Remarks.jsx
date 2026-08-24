@@ -123,6 +123,7 @@ export default function Remarks() {
 				headers={headers}
 				data={data}
 				loading={loading}
+				user={user}
 				actionButton={<ExportExcel tableId="Remarks" />}
 				actionHeaders={["Actions"]}
 				actionCells={(row) => [

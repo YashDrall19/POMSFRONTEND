@@ -6,9 +6,56 @@ import { getFormattedDate } from "../utils/DateTime";
 import Modal from "./Modal";
 import PurchaseOrderTemplate from "./PurchaseOrderTemplate";
 
-export default function OrderTable({headers, data, title, loading=false, actionButton = null, actionHeaders = null, actionCells = null}) {                         // 
+function DetailValue({ value, path = "value", horizontal = false }) {
+  if (Array.isArray(value)) {
+    if (!value.length) return <span className="detail-empty">Empty list</span>;
+
+    return value.every((item) => item === null || typeof item !== "object") ? (
+      <div className="detail-pills">
+        {value.map((item, index) => (
+          <span className="detail-pill" key={`${path}-${index}`}>{String(item)}</span>
+        ))}
+      </div>
+    ) : (
+      <div className={`detail-list ${horizontal ? "detail-list-horizontal" : ""}`}>
+        {value.map((item, index) => (
+          <div className="detail-list-item" key={`${path}-${index}`}>
+            <span className="detail-list-index">{index + 1}</span>
+            <DetailValue value={item} path={`${path}-${index}`} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (value && typeof value === "object") {
+    return (
+      <div className="detail-object">
+        {Object.entries(value).map(([key, nestedValue]) => (
+          <div className="detail-field" key={`${path}-${key}`}>
+            <div className="detail-label">{formatHeader(key)}</div>
+            <div className="detail-value">
+              <DetailValue
+                value={nestedValue}
+                path={`${path}-${key}`}
+                horizontal={key === "items"}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return <span>{value === null || value === undefined || value === "" ? "--" : String(value)}</span>;
+}
+
+export default function OrderTable({headers, data, title, loading=false, actionButton = null, actionHeaders = null, actionCells = null, user}) {
   
   const [tableData, setTableData] = useState([]);
+  const [selectedRow, setSelectedRow] = useState(null);
+  const showActions = user?.role === "ADMIN";
+  const columnCount = headers.length + 1 + (showActions ? Math.max(actionHeaders?.length || 0, actionCells ? 1 : 0) : 0);
   useEffect(() => {
     setTableData(data);
   }, [data]);
@@ -67,7 +114,7 @@ export default function OrderTable({headers, data, title, loading=false, actionB
               {headers?.map((h, i) => (
                 <th key={i}>{formatHeader(h)}</th>
               ))}
-              {actionHeaders && 
+              {showActions && actionHeaders &&
                 actionHeaders?.map((a, i) => {
                   return (
                     <th key={i}>{a}</th>
@@ -80,12 +127,12 @@ export default function OrderTable({headers, data, title, loading=false, actionB
           <tbody>
             {loading ? 
                 (<tr>
-                    <td colSpan={headers?.length + 1} className="text-center">
+                    <td colSpan={columnCount} className="text-center">
                         <Loader />
                     </td>
                 </tr>) :
                 tableData?.length > 0 ? (tableData?.map((d, i) => (
-                    <tr key={i} className="cursor-pointer">
+                    <tr key={i} className="cursor-pointer" onClick={() => setSelectedRow(d)}>
                       <td>{i+1}.</td>
                       {headers.map((h, j) => {
                         let val = d[h];
@@ -114,8 +161,8 @@ export default function OrderTable({headers, data, title, loading=false, actionB
                             <td key={j}>{val || "--"}</td>
                         )
                       })}
-                      {actionCells && (
-                        <td>
+                      {showActions && actionCells && (
+                        <td onClick={(event) => event.stopPropagation()}>
                           <div className="d-flex gap-2 align-items-center">
                             {actionCells(d, i)}
                           </div>
@@ -125,7 +172,7 @@ export default function OrderTable({headers, data, title, loading=false, actionB
                 ))
                 ) : (
                 <tr>
-                    <td colSpan={headers?.length + 1} className="text-center">
+                    <td colSpan={columnCount} className="text-center">
                         No results found
                     </td>
                 </tr>
@@ -134,6 +181,18 @@ export default function OrderTable({headers, data, title, loading=false, actionB
           </tbody>
         </table>
       </div>
+
+      <Modal
+        showModal={Boolean(selectedRow)}
+        onclose={() => setSelectedRow(null)}
+        title={`${title} Details`}
+        size="xl"
+        content={
+          <div className="detail-modal-body">
+            {selectedRow && <DetailValue value={selectedRow} />}
+          </div>
+        }
+      />
 			
 			
     </div>

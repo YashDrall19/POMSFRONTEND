@@ -350,7 +350,7 @@ export default function Generate() {
               name="items"
               options={products?.map((p) => ({
                 value: p.id,
-                label: `${p.item_code} - ${p.description}`,
+                label: `${p.item_code} - ${p.description} - ${p.presentation}`,
                 data: p
               }))}
 

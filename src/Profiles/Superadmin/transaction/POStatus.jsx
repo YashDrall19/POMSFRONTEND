@@ -522,6 +522,7 @@ export default function POStatus() {
 				headers={headers}
 				data={orders}
 				loading={loading}
+				user={user}
 				actionButton={<ExportExcel tableId="Drafted Quotations" />}
 				actionHeaders={["Actions"]}
 				actionCells={(row) => [

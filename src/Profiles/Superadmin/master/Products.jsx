@@ -123,6 +123,7 @@ export default function Products() {
 				headers={headers}
 				data={data}
 				loading={loading}
+				user={user}
 				actionButton={<ExportExcel tableId="Products" />}
 				actionHeaders={["Actions"]}
 				actionCells={(row) => [

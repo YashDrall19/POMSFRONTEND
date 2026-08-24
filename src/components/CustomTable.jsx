@@ -3,10 +3,54 @@ import { FadeLoader } from "react-spinners";
 import Loader from "./Loader";
 import { formatHeader } from "../utils/FormatString";
 import { base_url } from "../redux/urls";
+import Modal from "./Modal";
 
-export default function CustomTable({headers, data, title, loading=false, actionButton = null, actionHeaders = null, actionCells = null}) {                         // 
+function DetailValue({ value, path = "value" }) {
+  if (Array.isArray(value)) {
+    if (!value.length) return <span className="detail-empty">Empty list</span>;
+
+    return value.every((item) => item === null || typeof item !== "object") ? (
+      <div className="detail-pills">
+        {value.map((item, index) => (
+          <span className="detail-pill" key={`${path}-${index}`}>{String(item)}</span>
+        ))}
+      </div>
+    ) : (
+      <div className="detail-list">
+        {value.map((item, index) => (
+          <div className="detail-list-item" key={`${path}-${index}`}>
+            <span className="detail-list-index">{index + 1}</span>
+            <DetailValue value={item} path={`${path}-${index}`} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (value && typeof value === "object") {
+    return (
+      <div className="detail-object">
+        {Object.entries(value).map(([key, nestedValue]) => (
+          <div className="detail-field" key={`${path}-${key}`}>
+            <div className="detail-label">{formatHeader(key)}</div>
+            <div className="detail-value">
+              <DetailValue value={nestedValue} path={`${path}-${key}`} />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return <span>{value === null || value === undefined || value === "" ? "--" : String(value)}</span>;
+}
+
+export default function CustomTable({headers, data, title, loading=false, actionButton = null, actionHeaders = null, actionCells = null, user}) {
   
   const [tableData, setTableData] = useState([]);
+  const [selectedRow, setSelectedRow] = useState(null);
+  const showActions = user?.role === "ADMIN";
+  const columnCount = headers.length + 1 + (showActions ? Math.max(actionHeaders?.length || 0, actionCells ? 1 : 0) : 0);
   useEffect(() => {
     setTableData(data);
   }, [data]);
@@ -60,7 +104,7 @@ export default function CustomTable({headers, data, title, loading=false, action
               {headers?.map((h, i) => (
                 <th key={i}>{formatHeader(h)}</th>
               ))}
-              {actionHeaders && 
+              {showActions && actionHeaders &&
                 actionHeaders?.map((a, i) => {
                   return (
                     <th key={i}>{a}</th>
@@ -73,12 +117,12 @@ export default function CustomTable({headers, data, title, loading=false, action
           <tbody>
             {loading ? 
                 (<tr>
-                    <td colSpan={headers?.length + 1} className="text-center">
+                    <td colSpan={columnCount} className="text-center">
                         <Loader />
                     </td>
                 </tr>) :
                 tableData?.length > 0 ? (tableData?.map((d, i) => (
-                    <tr key={i} className="cursor-pointer">
+                    <tr key={i} className="cursor-pointer" onClick={() => setSelectedRow(d)}>
                       <td>{i+1}.</td>
                       {headers.map((h, j) => {
                         let val = d[h];
@@ -88,7 +132,7 @@ export default function CustomTable({headers, data, title, loading=false, action
                           val = <div>
                             {d[h].map((v, i) => {
                               return (
-                                <p key={i} className="card rounded-5 text-center p-1 bg-light">{v}</p>
+                                <p key={i} className="card rounded-5 text-center px-2 mb-2 bg-light">{v}</p>
                               )
                             })}
                           </div>;
@@ -99,8 +143,8 @@ export default function CustomTable({headers, data, title, loading=false, action
                             <td key={j} style={{minWidth: "100px"}}>{val || "--"}</td>
                         )
                       })}
-                      {actionCells && (
-                        <td>
+                      {showActions && actionCells && (
+                        <td onClick={(event) => event.stopPropagation()}>
                           <div className="d-flex gap-2 align-items-center">
                             {actionCells(d, i)}
                           </div>
@@ -110,7 +154,7 @@ export default function CustomTable({headers, data, title, loading=false, action
                 ))
                 ) : (
                 <tr>
-                    <td colSpan={headers?.length + 1} className="text-center">
+                    <td colSpan={columnCount} className="text-center">
                     No results found
                     </td>
                 </tr>
@@ -119,6 +163,18 @@ export default function CustomTable({headers, data, title, loading=false, action
           </tbody>
         </table>
       </div>
+
+      <Modal
+        showModal={Boolean(selectedRow)}
+        onclose={() => setSelectedRow(null)}
+        title={`${title} Details`}
+        size="lg"
+        content={
+          <div className="detail-modal-body">
+            {selectedRow && <DetailValue value={selectedRow} />}
+          </div>
+        }
+      />
     </div>
   );
 }

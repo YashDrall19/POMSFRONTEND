@@ -212,6 +212,7 @@ export default function Vendor() {
 				headers={headers}
 				data={data}
 				loading={loading}
+				user={user}
 				actionButton={<ExportExcel tableId="Vendors" />}
 				actionHeaders={["Actions"]}
 				actionCells={(row) => [

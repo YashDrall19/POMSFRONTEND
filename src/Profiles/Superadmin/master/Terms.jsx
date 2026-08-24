@@ -124,6 +124,7 @@ export default function Terms() {
 				headers={headers}
 				data={data}
 				loading={loading}
+				user={user}
 				actionButton={<ExportExcel tableId="Terms" />}
 				actionHeaders={["Actions"]}
 				actionCells={(row) => [
