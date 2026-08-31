@@ -50,11 +50,11 @@ function DetailValue({ value, path = "value", horizontal = false }) {
   return <span>{value === null || value === undefined || value === "" ? "--" : String(value)}</span>;
 }
 
-export default function OrderTable({headers, data, title, loading=false, actionButton = null, actionHeaders = null, actionCells = null, user}) {
+export default function OrderTable({headers, data, title, loading=false, actionButton = null, actionHeaders = null, actionCells = null, user, showAction}) {
   
   const [tableData, setTableData] = useState([]);
   const [selectedRow, setSelectedRow] = useState(null);
-  const showActions = user?.role === "ADMIN";
+  const showActions = user?.role === "ADMIN" || showAction;
   const columnCount = headers.length + 1 + (showActions ? Math.max(actionHeaders?.length || 0, actionCells ? 1 : 0) : 0);
   useEffect(() => {
     setTableData(data);
@@ -153,7 +153,7 @@ export default function OrderTable({headers, data, title, loading=false, actionB
                         } else if (h === "Quotation Number") {
                           val = <div>{d?.po_number}</div>;
                         } else if (h === "Products") {
-                          val = <div>{d?.items?.map((i, k) => <p className="card rounded-5 text-center text-white bg-info px-3 mb-2" key={k}>{i?.data?.presentation}</p>)}</div>;
+                          val = <div>{d?.items?.map((i, k) => <p className="card rounded-5 text-center text-white bg-info px-3 mb-2" key={k}>{i?.data?.description}</p>)}</div>;
                         } else {
                           val = <div>{d[h?.toLowerCase()?.replace(" ", "_")]}</div>;
                         }

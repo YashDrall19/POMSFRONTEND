@@ -257,7 +257,7 @@ export default function InvoiceTemplate({ data, invoices, copyLabel = "Original 
       </div>
 
       <p className="mt-4 text-center">Quotation Reference Number: {data?.po_number}</p>
-      <p className="mt-4 text-center">Research Use Only Remark</p>
+      <p className="mt-4 text-center">Research Use Only</p>
 
       {/* <div className="d-flex justify-content-end">
         <button className="btn btn-primary" onClick={handlePrint}>Save as PDF</button>

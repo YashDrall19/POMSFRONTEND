@@ -515,20 +515,23 @@ export default function Reports() {
 				data={orders}
 				loading={loading}
 				user={user}
+				showAction={true}
 				actionButton={<ExportExcel tableId="All Quotations" />}
 				actionHeaders={["Actions"]}
 				actionCells={(row) => [
 					<button className='btn btn-info' key={row?.po_number} onClick={() => {setShowModal(true);setPIV(row);}}>View</button>,
-					<button className='btn btn-outline-success' key={row?.id} onClick={() => {setShowUpdate(true);setPIV(row);}}>Update Status</button>,
-					<button className='btn btn-secondary' key={row?.po_number} 
-						onClick={() => {
-							setPIV(row);
-							isPIVGenerated(row?.po_number) ? setShowInvoice(true) : setShowConfirmation(true);
-						}}
-					>
-							{/* {setShowConfirmation(true); setPIV(row);} */}
-						{isPIVGenerated(row?.po_number) ? "View Invoice" : "Generate Invoice"}
-					</button>
+					(user.role === "ADMIN" && <button className='btn btn-outline-success' key={row?.id} onClick={() => {setShowUpdate(true);setPIV(row);}}>Update Status</button>),
+					((isPIVGenerated(row?.po_number) || user.role === "ADMIN") &&
+						<button className='btn btn-secondary' key={row?.po_number} 
+							onClick={() => {
+								setPIV(row);
+								isPIVGenerated(row?.po_number) ? setShowInvoice(true) : setShowConfirmation(true);
+							}}
+						>
+								{/* {setShowConfirmation(true); setPIV(row);} */}
+							{isPIVGenerated(row?.po_number) ? "View Invoice" : "Generate Invoice"}
+						</button>
+					)
 				]}
 			/>
 
