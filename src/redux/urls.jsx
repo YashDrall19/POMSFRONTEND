@@ -31,10 +31,11 @@ export const urls = {
 };
 
 const handleApiError = (error) => {
-  const errors = error?.response?.data?.data;
-  console.log(error?.response)
+  const response = error?.response;
+  const errors = response?.data?.data;
+  console.error("API request failed:", response?.status, response?.data);
 
-  if (errors) {
+  if (errors && typeof errors === "object") {
     Object.entries(errors).forEach(([key, value]) => {
       const message = Array.isArray(value)
         ? value.join(", ")
@@ -42,7 +43,13 @@ const handleApiError = (error) => {
       toast.error(`${key} : ${message}`);
     });
   } else {
-    toast.error(error?.response?.data?.message || "Network Error");
+    const message = response?.data?.message;
+    toast.error(
+      message ||
+        (response?.status
+          ? `Server error (${response.status}). Please contact support if it continues.`
+          : "Network Error")
+    );
   }
 };
 
@@ -94,4 +101,3 @@ export const uploadFile = (url, formData) => {
     }
   };
 };
-
