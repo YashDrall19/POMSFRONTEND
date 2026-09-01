@@ -11,6 +11,7 @@ import { getFormattedDate } from '../../../utils/DateTime';
 import PurchaseOrderTemplate from '../../../components/PurchaseOrderTemplate';
 import Loader from '../../../components/Loader';
 import Select from 'react-select';
+import { calculateLineItem } from '../../../utils/orderTotals';
 
 export default function POStatus() {
 	const dispatch = useDispatch();
@@ -272,9 +273,27 @@ export default function POStatus() {
 	const handleEditPIV = async() => {
 		const companyData = companies?.find(c => c?.company_name === (editing?.company || editing?.company_data?.company_name));
 		const vendorData = vendors?.find(v => v?.company_name === (editing?.vendor || editing?.vendor_data?.company_name));
+		const calculatedItems = (editing.items || []).map((item) => {
+			const { subtotal, gstAmount, total, discountAmount, grandTotal: itemGrandTotal } = calculateLineItem(item);
+
+			return {
+				...item,
+				qty: Number(item.qty || 0),
+				price: Number(item.price || 0),
+				gst: Number(item.gst || 0),
+				discount: Number(item.discount || 0),
+				subtotal,
+				gst_amount: gstAmount,
+				total,
+				discount_amount: discountAmount,
+				grand_total: itemGrandTotal,
+				line_total: itemGrandTotal,
+			};
+		});
 
 		const payload = {
 			...editing,
+			items: calculatedItems,
 			company_data: companyData,
 			vendor_data: vendorData,
 			total_price: editingTotalAmount,
@@ -340,19 +359,7 @@ export default function POStatus() {
 	const [specialDiscount, setSpecialDiscount] = useState(0);
 
 	const editingTotalAmount = (editing?.items || [])
-		.reduce((sum, item) => {
-			const qty = Number(item.qty || 0);
-			const price = Number(item.price || 0);
-			const gstPerc = Number(item.gst || 0);
-			const discount = Number(item.discount || 0);
-
-			const lineTotal = qty * price;
-			const gstAmount = (lineTotal * gstPerc) / 100;
-			const discountAmount = (lineTotal * discount) / 100;
-
-			return sum + (lineTotal + gstAmount - discountAmount);
-		}, 0)
-		.toFixed(2);
+		.reduce((sum, item) => sum + calculateLineItem(item).grandTotal, 0);
 
 	const editingGrandTotal = Number(editingTotalAmount || 0) - Number(specialDiscount || 0);
 
@@ -752,75 +759,81 @@ export default function POStatus() {
 													<th>Qty</th>
 													<th>Price</th>
 													<th>GST (%)</th>
-													<th>Discount (%)</th>
+													<th>GST Amount</th>
 													<th>Total</th>
+													<th>Discount (%)</th>
+													<th>Grand Total</th>
 												</tr>
 											</thead>
 
 											<tbody>
 												{editing.items.map((item, index) => {
-													const qty = Number(item.qty || 0);
-													const price = Number(item.price || 0);
-													const gstPerc = Number(item.gst || 0);
-													const discount = Number(item.discount || 0);
-
-													const lineTotal = qty * price;
-													const gstAmount = (lineTotal * gstPerc) / 100;
-													const discountAmount = (lineTotal * discount) / 100;
-													const total = lineTotal + gstAmount - discountAmount;
+													const { gstAmount, total, discountAmount, grandTotal: itemGrandTotal } = calculateLineItem(item);
 
 													return (
 														<tr key={index}>
 															<td>{item.label}</td>
 															<td>{item.data?.presentation}</td>
 															<td>
-																<input
-																	type="number"
-																	className="form-control"
+															<input
+																type="number"
+																min="1"
+																className="form-control"
 																	value={item.qty}
 																	onChange={(e) => handleItemChange(index, "qty", e.target.value)}
 																	onWheel={(e) => e.target.blur()}
 																/>
 															</td>
 															<td>
-																<input
-																	type="number"
-																	className="form-control"
+															<input
+																type="number"
+																min="0"
+																className="form-control"
 																	value={item.price}
 																	onChange={(e) => handleItemChange(index, "price", e.target.value)}
 																	onWheel={(e) => e.target.blur()}
 																/>
 															</td>
 															<td>
-																<input
-																	type="number"
-																	className="form-control"
-																	value={item.gst}
+															<input
+																type="number"
+																min="0"
+																className="form-control"
+																value={item.gst}
 																	onChange={(e) => handleItemChange(index, "gst", e.target.value)}
 																	onWheel={(e) => e.target.blur()}
-																/>
-															</td>
-															<td>
-																<input
-																	type="number"
-																	className="form-control"
+															/>
+														</td>
+														<td><input className="form-control" value={gstAmount.toFixed(2)} disabled /></td>
+														<td>₹ {total.toFixed(2)}</td>
+														<td>
+															<input
+																type="number"
+																min="0"
+																max="100"
+																step="0.01"
+																className="form-control"
 																	value={item.discount}
 																	onChange={(e) => handleItemChange(index, "discount", e.target.value)}
 																	onWheel={(e) => e.target.blur()}
 																/>
 															</td>
-															<td>₹ {total.toFixed(2)}</td>
+														<td>
+															<p className="text-end mb-1">₹ {total.toFixed(2)}</p>
+															<p className="text-end mb-1">- ₹ {discountAmount.toFixed(2)}</p>
+															<p className="text-end mb-0">= ₹ {itemGrandTotal.toFixed(2)}</p>
+														</td>
 														</tr>
 													);
 												})}
 
 												<tr className='table-secondary fw-bold'>
-													<td colSpan="6" className='text-end'>Total Amount</td>
-													<td>₹ {editingTotalAmount}</td>
+													<td colSpan="8" className='text-end'>Total Amount</td>
+													<td>₹ {editingTotalAmount.toFixed(2)}</td>
 												</tr>
 
 												<tr className='fw-bold'>
-													<td colSpan="6" className='text-end'>Special Discount</td>
+													<td colSpan="8" className='text-end'>Special Discount</td>
 													<td>
 														<input 
 															type="number"
@@ -834,7 +847,7 @@ export default function POStatus() {
 												</tr>
 
 												<tr className='table-secondary fw-bold'>
-													<td colSpan="6" className='text-end'>Grand Total</td>
+													<td colSpan="8" className='text-end'>Grand Total</td>
 													<td>₹ {editingGrandTotal.toFixed(2)}</td>
 												</tr>
 											</tbody>

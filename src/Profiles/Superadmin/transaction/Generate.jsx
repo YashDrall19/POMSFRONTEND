@@ -1,12 +1,12 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import { useDispatch } from 'react-redux';
 import { getData, postOrUpdateData, urls } from '../../../redux/urls';
 import Select from 'react-select';
 import PurchaseOrderTemplate from '../../../components/PurchaseOrderTemplate';
 import Modal from '../../../components/Modal';
-import { useReactToPrint } from 'react-to-print';
 import Loader from '../../../components/Loader';
 import { AuthContext } from '../../../context/AuthContext';
+import { calculateLineItem } from '../../../utils/orderTotals';
 
 export default function Generate() {
   const dispatch = useDispatch();
@@ -176,7 +176,7 @@ export default function Generate() {
     }));
   };
 
-  const { user, logout, refreshUser } = useContext(AuthContext);
+  const { user, refreshUser } = useContext(AuthContext);
 
   useEffect(() => {
     refreshUser();
@@ -187,20 +187,44 @@ export default function Generate() {
     if (!user) {
       return;
     }
-    const {company, vendor, ...rest} = fields;
+    const items = fields.items || [];
+    // Company and vendor names are only form selectors; their complete data is
+    // stored in company_data and vendor_data for the quotation.
+    const rest = Object.fromEntries(
+      Object.entries(fields).filter(([key]) => !["company", "vendor", "items"].includes(key))
+    );
+    const calculatedItems = items.map((item) => {
+      const { subtotal, gstAmount, total, discountAmount, grandTotal: itemGrandTotal } = calculateLineItem(item);
+
+      return {
+        ...item,
+        qty: Number(item.qty || 0),
+        price: Number(item.price || 0),
+        gst: Number(item.gst || 0),
+        discount: Number(item.discount || 0),
+        subtotal,
+        gst_amount: gstAmount,
+        total,
+        discount_amount: discountAmount,
+        grand_total: itemGrandTotal,
+        // Retained for compatibility with existing consumers of the API.
+        line_total: itemGrandTotal,
+      };
+    });
     setLoading(true);
     try {
       const res = await dispatch(postOrUpdateData(
         urls.addpo,
         {
           ...rest, 
+          items: calculatedItems,
           punched_by: {
             id: user?.id,
             name: user?.name,
             employee_code: user?.employee_code,
           },
           total_price: totalAmount,
-          special_discount: specialDiscount || 0,
+          special_discount: Number(specialDiscount || 0),
           grand_total: grandTotal
         }
       ));
@@ -217,23 +241,10 @@ export default function Generate() {
 
   const [specialDiscount, setSpecialDiscount] = useState("");
 
-  const totalAmount = fields?.items
-    ?.reduce((sum, item) => {
-      const qty = Number(item.qty || 0);
-      const price = Number(item.price || 0);
-      const gstPerc = Number(item.gst || 0);
-      const discount = Number(item.discount || 0);
+  const totalAmount = (fields?.items || [])
+    .reduce((sum, item) => sum + calculateLineItem(item).grandTotal, 0);
 
-      const lineTotal = qty * price;
-      const gstAmount = (lineTotal * gstPerc) / 100;
-      const discountAmount = (lineTotal * discount) / 100;
-
-      return sum + (lineTotal + gstAmount - discountAmount);
-    }, 0)
-    ?.toFixed(2);
-
-
-  const grandTotal = totalAmount - specialDiscount;
+  const grandTotal = totalAmount - Number(specialDiscount || 0);
 
   return (
     <div className='mb-5'>
@@ -357,16 +368,30 @@ export default function Generate() {
               value={fields?.items || []}
 
               onChange={(selected) => {
-                setFields(prev => ({
-                  ...prev,
-                  items: selected?.map(item => ({
-                    ...item,
-                    qty: item.qty || 1,
-                    price: item.price || "",
-                    gst: item.gst || "",
-                    discount: 0
-                  }))
-                }));
+                setFields(prev => {
+                  const existingItems = prev.items || [];
+
+                  return {
+                    ...prev,
+                    items: (selected || []).map((item) => {
+                      const existingItem = existingItems.find(
+                        (currentItem) => currentItem.value === item.value
+                      );
+
+                      // React Select returns fresh option objects whenever the
+                      // selection changes. Reuse the existing row so manually
+                      // entered price, GST, quantity, and discount remain intact.
+                      return {
+                        ...item,
+                        ...existingItem,
+                        qty: existingItem?.qty ?? 1,
+                        price: existingItem?.price ?? "",
+                        gst: existingItem?.gst ?? "",
+                        discount: existingItem?.discount ?? 0,
+                      };
+                    }),
+                  };
+                });
               }}
             />
             {
@@ -382,8 +407,10 @@ export default function Generate() {
                         <th width="120">Qty</th>
                         <th width="150">Price</th>
                         <th width="120">GST (%)</th>
-                        <th width="150">Discount (%)</th>
+                        <th width="120">GST Amount</th>
                         <th width="150">Total</th>
+                        <th width="150">Discount (%)</th>
+                        <th width="150">Grand Total</th>
                       </tr>
                     </thead>
 
@@ -391,118 +418,118 @@ export default function Generate() {
 
                       {fields.items.map((item, index) => {
 
-                        const qty = Number(item.qty || 0);
-                        const price = Number(item.price || 0);
-                        const gstPerc = Number(item.gst || 0);
-                        const discount = Number(item.discount || 0);
+  const { gstAmount, total, discountAmount, grandTotal: itemGrandTotal } = calculateLineItem(item);
 
-                        const lineTotal = qty * price;
-                        const gstAmount = (lineTotal * gstPerc) / 100;
-                        const discountAmount = (lineTotal * discount) / 100;
-                        const total = lineTotal + gstAmount - discountAmount;
+  return (
+    <tr key={item.value}>
 
-                        return (
-                          <tr key={item.value}>
+      <td>
+        {item.data.item_code} - {item.data.description}
+      </td>
 
-                            <td>
-                              {item.data.item_code} - {item.data.description}
-                            </td>
+      <td>
+        {item.data.presentation}
+      </td>
 
-                            <td>
-                              {item.data.presentation}
-                            </td>
+      <td>
+        <input
+          type="number"
+          min="1"
+          className="form-control"
+          value={item.qty}
+          onChange={(e) =>
+            handleItemChange(index, "qty", e.target.value)
+          }
+          onWheel={(e) => e.target.blur()}
+        />
+      </td>
 
-                            <td>
-                              <input
-                                type="number"
-                                min="1"
-                                className="form-control"
-                                value={item.qty}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    index,
-                                    "qty",
-                                    e.target.value
-                                  )
-                                }
-                                onWheel={(e) => e.target.blur()}
-                              />
-                            </td>
+      <td>
+        <input
+          type="number"
+          min="0"
+          className="form-control"
+          value={item.price}
+          onChange={(e) =>
+            handleItemChange(index, "price", e.target.value)
+          }
+          onWheel={(e) => e.target.blur()}
+        />
+      </td>
 
-                            <td>
-                              <input
-                                type="number"
-                                min="0"
-                                // step="0.01"
-                                className="form-control"
-                                value={item.price}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    index,
-                                    "price",
-                                    e.target.value
-                                  )
-                                }
-                                onWheel={(e) => e.target.blur()}
-                              />
-                            </td>
+      <td>
+        <input
+          type="number"
+          min="0"
+          className="form-control"
+          value={item.gst}
+          onChange={(e) =>
+            handleItemChange(index, "gst", e.target.value)
+          }
+          onWheel={(e) => e.target.blur()}
+        />
+      </td>
 
-                            <td>
-                              <input
-                                type="number"
-                                min="0"
-                                // step="0.01"
-                                className="form-control"
-                                value={item.gst}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    index,
-                                    "gst",
-                                    e.target.value
-                                  )
-                                }
-                                onWheel={(e) => e.target.blur()}
-                              />
-                            </td>
+      <td>
+        <input
+          className="form-control"
+          value={gstAmount.toFixed(2)}
+          disabled
+        />
+      </td>
 
-                            <td>
-                              <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                step="0.01"
-                                className="form-control"
-                                value={item.discount}
-                                onChange={(e) =>
-                                  handleItemChange(
-                                    index,
-                                    "discount",
-                                    e.target.value
-                                  )
-                                }
-                                onWheel={(e) => e.target.blur()}
-                              />
-                            </td>
+      <td>
+        ₹ {total.toFixed(2)}
+      </td>
 
-                            <td>
-                              ₹ {total.toFixed(2)}
-                            </td>
+      <td>
+        <input
+          type="number"
+          min="0"
+          max="100"
+          step="0.01"
+          className="form-control"
+          value={item.discount}
+          onChange={(e) =>
+            handleItemChange(
+              index,
+              "discount",
+              e.target.value
+            )
+          }
+          onWheel={(e) => e.target.blur()}
+        />
+      </td>
 
-                          </tr>
-                        );
-                      })}
+      <td>
+        <p className="text-end mb-1">
+          ₹ {total.toFixed(2)}
+        </p>
+
+        <p className="text-end mb-1">
+          - ₹ {discountAmount.toFixed(2)}
+        </p>
+
+        <p className="text-end mb-0">
+          = ₹ {itemGrandTotal.toFixed(2)}
+        </p>
+      </td>
+
+    </tr>
+  );
+})}
 
                       <tr className='table-secondary fw-bold'>
-                        <td colSpan="6" className='text-end'>
+                        <td colSpan="8" className='text-end'>
                           Total Amount
                         </td>
                         <td>
-                          ₹ {totalAmount}
+                          ₹ {totalAmount.toFixed(2)}
                         </td>
                       </tr>
 
                       <tr className='fw-bold'>
-                        <td colSpan="6" className='text-end'>
+                        <td colSpan="8" className='text-end'>
                           Special Discount
                         </td>
                         <td>
@@ -518,11 +545,11 @@ export default function Generate() {
                       </tr>
 
                       <tr className='table-secondary fw-bold'>
-                        <td colSpan="6" className='text-end'>
+                        <td colSpan="8" className='text-end'>
                           Grand Total
                         </td>
                         <td>
-                          ₹ {grandTotal}
+                          ₹ {grandTotal.toFixed(2)}
                         </td>
                       </tr>
 

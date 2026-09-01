@@ -17,7 +17,7 @@ export default function InvoiceReports() {
     refreshUser();
   }, [refreshUser]);
 
-  const headers = ["Invoice Number", "Quotation Number", "Date", "Company", "Vendor", "Punched By"];
+  const headers = ["Invoice Number", "Quotation Number", "Date", "Company", "Vendor", "Total Price", "Special Discount", "Grand Total", "Products", "Punched By"];
   const [loading, setLoading] = useState(false);
   const predefinedRanges = [
     { label: "Today", value: "today" },
@@ -121,8 +121,7 @@ export default function InvoiceReports() {
       ...(fields?.company && { company_data__company_name: fields.company }),
       ...(fields?.vendor && { vendor_data__company_name: fields.vendor }),
       ...(fields?.employee && { punched_by__employee_code: fields.employee }),
-      ...(fields?.po_status && { po_status: fields.po_status }),
-      ...(fields?.mr_status && { mr_status: fields.mr_status }),
+      ...(fields?.product_name && { product_name: fields.product_name }),
     };
 
     setLoading(true);
@@ -196,13 +195,22 @@ export default function InvoiceReports() {
     }
   };
 
-  const searchInvoice = async(po_number) => {
+  const searchInvoice = async(invoice) => {
     const res = await dispatch(getData(urls.filters, {
       filter: "purchaseorders",
-      fields: {po_number}
+      fields: {po_number: invoice?.po_number}
     }));
     if (res?.success) {
-      setPIV(res?.data[0]);
+      const quotation = res?.data[0];
+      // The invoice carries a snapshot of commercial values. Use it for the
+      // printed invoice while retaining quotation-only address and terms data.
+      setPIV({
+        ...quotation,
+        items: invoice?.items?.length ? invoice.items : quotation?.items,
+        total_price: invoice?.total_price ?? quotation?.total_price,
+        special_discount: invoice?.special_discount ?? quotation?.special_discount,
+        grand_total: invoice?.grand_total ?? quotation?.grand_total,
+      });
       setShowInvoice(true);
     }
   };
@@ -338,6 +346,18 @@ export default function InvoiceReports() {
 						</select>
 					</div> */}
 
+					<div className="col-md-6 mb-3">
+						<label className='form-label m-0'>Product Name / Item Code / Description</label>
+						<input
+							type="text"
+							className='form-control'
+							name='product_name'
+							value={fields?.product_name || ""}
+							onChange={handleChange}
+							placeholder='Product Name'
+						/>
+					</div>
+
 					<div className="col-md-12 d-flex justify-content-end gap-3">
 						<button className='btn btn-warning' onClick={() => setFields({})}>Reset</button>
 						<button className='btn btn-primary' onClick={handleFilterSubmit}>Search</button>
@@ -355,7 +375,7 @@ export default function InvoiceReports() {
         actionHeaders={["Actions"]}
         actionCells={(row) => [
           <button className='btn btn-info' key={row?.id} onClick={() => searchPO(row?.po_number)}>View Quotation</button>,
-          <button className='btn btn-outline-secondary' key={row?.invoice_number} onClick={() => searchInvoice(row?.po_number)}>View Invoice</button>
+          <button className='btn btn-outline-secondary' key={row?.invoice_number} onClick={() => searchInvoice(row)}>View Invoice</button>
         ]}
       />
 

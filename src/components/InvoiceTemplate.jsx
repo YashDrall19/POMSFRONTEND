@@ -1,7 +1,7 @@
 import "./template.css";
 import logo from "../../public/pivlogo.png";
 import { ToWords } from "to-words";
-import { formatOrderAmount, getLineTotal, getOrderTotals } from "../utils/orderTotals";
+import { formatOrderAmount, getLineItemTotals, getOrderTotals } from "../utils/orderTotals";
 
 
 export default function InvoiceTemplate({ data, invoices, copyLabel = "Original Copy for Recipient" }) {
@@ -166,9 +166,11 @@ export default function InvoiceTemplate({ data, invoices, copyLabel = "Original 
             <th>Presentation</th>
             <th>Qty</th>
             <th>Price</th>
-            <th>GST</th>
-            <th>Discount</th>
+            <th>GST (%)</th>
+            <th>GST Amount</th>
             <th>Total</th>
+            <th>Discount</th>
+            <th>Grand Total</th>
           </tr>
         </thead>
 
@@ -176,7 +178,7 @@ export default function InvoiceTemplate({ data, invoices, copyLabel = "Original 
 
           {data?.items?.map((item,i)=>{
 
-            const total = getLineTotal(item);
+            const { gstAmount, total, discountAmount, grandTotal: itemGrandTotal } = getLineItemTotals(item);
 
             return(
               <tr key={i}>
@@ -192,19 +194,23 @@ export default function InvoiceTemplate({ data, invoices, copyLabel = "Original 
                 <td>{item.qty}</td>
 
                 <td>{item.price}</td>
-                <td>{item.gst}%</td>
-                <td>{item.discount || 0}%</td>
-
-                <td>{total.toFixed(2)}</td>
+                <td>{item.gst || 0}</td>
+                <td>{formatOrderAmount(gstAmount, data?.currency)}</td>
+                <td>{formatOrderAmount(total, data?.currency)}</td>
+                <td>{item.discount || 0}</td>
+                <td>
+                  {formatOrderAmount(itemGrandTotal, data?.currency)}
+                  {/* {discountAmount > 0 && <div className="small">Discount: - {formatOrderAmount(discountAmount, data?.currency)}</div>} */}
+                </td>
               </tr>
             )
 
           })}
 
-          <tr><td colSpan="7" className="text-end"><strong>Subtotal</strong></td><td><strong>{formatOrderAmount(totalPrice, data?.currency)}</strong></td></tr>
-          <tr><td colSpan="7" className="text-end"><strong>Special Discount</strong></td><td><strong>- {formatOrderAmount(specialDiscount, data?.currency)}</strong></td></tr>
+          <tr><td colSpan="9" className="text-end"><strong>Total Amount</strong></td><td><strong>{formatOrderAmount(totalPrice, data?.currency)}</strong></td></tr>
+          <tr><td colSpan="9" className="text-end"><strong>Special Discount</strong></td><td><strong>- {formatOrderAmount(specialDiscount, data?.currency)}</strong></td></tr>
           <tr>
-            <td colSpan="6">
+            <td colSpan="8">
               <strong>
                 {amountToWords(grandTotal)}
               </strong>
@@ -256,8 +262,8 @@ export default function InvoiceTemplate({ data, invoices, copyLabel = "Original 
         </table>
       </div>
 
-      <p className="mt-4 text-center">Quotation Reference Number: {data?.po_number}</p>
-      <p className="mt-4 text-center">Research Use Only</p>
+      <p className="mt-2 text-center">Quotation Reference Number: {data?.po_number}</p>
+      <p className="text-center">Research Use Only</p>
 
       {/* <div className="d-flex justify-content-end">
         <button className="btn btn-primary" onClick={handlePrint}>Save as PDF</button>

@@ -22,7 +22,7 @@ export default function Reports() {
   useEffect(() => {
     refreshUser();
   }, [refreshUser]);
-  const headers = ["Quotation Number", "Date", "Company", "Vendor", "Total Price", "Special Discount", "Grand Total", "Quotation Status", "Punched By"];
+  const headers = ["Quotation Number", "Date", "Company", "Vendor", "Total Price", "Special Discount", "Grand Total", "Quotation Status", "Products","Punched By"];
   const [loading, setLoading] = useState(false);
 	const [orders, setOrders] = useState([]);
 	const getOrders = async() => {
@@ -320,7 +320,17 @@ export default function Reports() {
 	const generateInvoice = async() => {
 		const res = await dispatch(postOrUpdateData(
 			urls.addinvoice,
-			{po_number: piv?.po_number, company_data: piv?.company_data, vendor_data: piv?.vendor_data, punched_by: piv?.punched_by}
+			{
+				po_number: piv?.po_number,
+				company_data: piv?.company_data,
+				vendor_data: piv?.vendor_data,
+				punched_by: piv?.punched_by,
+				items: piv?.items || [],
+				currency: piv?.currency || "",
+				total_price: Number(piv?.total_price || 0),
+				special_discount: Number(piv?.special_discount || 0),
+				grand_total: Number(piv?.grand_total || 0),
+			}
 		));
 		if (res?.success) {
 			getOrders();
