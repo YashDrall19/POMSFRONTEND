@@ -321,14 +321,14 @@ export default function Quotation({data}) {
 									<p>{data?.internal_remarks}</p>
 								</td>
 								<td>A/c Holder's Name:</td>
-								<td><strong>Arsh Biotech Private Limited</strong></td>
+								<td><strong>Arsh Biotech Pvt. Ltd.</strong></td>
 								<td colSpan={5}></td>
 							</tr>
 
 							<tr>
 								<td colSpan={6}></td>
 								<td>Bank Name:</td>
-								<td><strong>HDFC Bank</strong></td>
+								<td><strong>HDFC Bank Ltd.</strong></td>
 								<td colSpan={5}></td>
 							</tr>
 
@@ -348,6 +348,17 @@ export default function Quotation({data}) {
 								<td colSpan={6}></td>
 								<td>Branch & IFS Code:</td>
 								<td><strong>Pitampura, HDFC0000158</strong></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+
+							<tr>
+								<td colSpan={6}></td>
+								<td>Address</td>
+								<td><strong>23-A, NN Tower, Community Centre, Road No.44, Pitampura, Delhi - 110034</strong></td>
 								<td></td>
 								<td></td>
 								<td></td>

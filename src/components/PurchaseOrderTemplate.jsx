@@ -243,15 +243,17 @@ export default function PurchaseOrderTemplate({ data }) {
             </tr>
             <tr>
               <td>
-                <p>HDFC Bank Ltd.</p>
-                <p>A/C No.-01582320004506</p>
-                <p>IFSC-HDFC0000158</p>
+                <p><strong>Beneficiary Name:</strong> Arsh Biotech Pvt. Ltd.</p>
+                <p><strong>Bank's Name:</strong> HDFC Bank Ltd.</p>
+                <p><strong>Address:</strong> 23-A, NN Tower, Community Centre, Road No.44, Pitampura, Delhi - 110034</p>
+                <p><strong>A/C No.:</strong> 50200006661451</p>
+                <p><strong>IFSC Code:</strong> HDFC0000158</p>
               </td>
-              <td>
+              {/* <td>
                 <p>State Bank of India</p>
                 <p>A/C no.64061689117</p>
                 <p>IFSC-SBIN0017983</p>
-              </td>
+              </td> */}
             </tr>
             <tr>
               <td colSpan={2} className="text-center"><strong>For UPI/Credit Card:- https://lifetechindia.com/payments.php</strong></td>
