@@ -255,9 +255,9 @@ export default function PurchaseOrderTemplate({ data }) {
                 <p>IFSC-SBIN0017983</p>
               </td> */}
             </tr>
-            {/* <tr>
+            <tr>
               <td colSpan={2} className="text-center"><strong>For UPI/Credit Card:- https://lifetechindia.com/payments.php</strong></td>
-            </tr> */}
+            </tr>
           </tbody>
         </table>
       </div>
