@@ -90,6 +90,7 @@ export default function InvoiceTemplate({ data, invoices, copyLabel = "Original 
           <p>{data?.vendor_data?.address}</p>
           <p>Ph: {data?.vendor_data?.phone?.join(", ")}</p>
           <p>Tel: {data?.vendor_data?.telephone?.join(", ")}</p>
+          <p>GST: {data?.vendor_data?.tax_registration}</p>
           <p>Email: {data?.vendor_data?.email?.join(", ")}</p>
           <p>Contact Person: {data?.vendor_data?.contact_person}</p>
         </div>
@@ -121,6 +122,7 @@ export default function InvoiceTemplate({ data, invoices, copyLabel = "Original 
           <p><strong>{data?.company_data?.company_name}</strong></p>
           <p>{data?.company_data?.address}</p>
           {data?.company_data?.tax_registration && <p>GST No.- {data?.company_data?.tax_registration}</p>}
+          <p>Email: {data?.company_data?.email?.join(", ")}</p>
           <p>Phone Number: {data?.company_data?.phone?.join(", ")}</p>
           <p>Contact Person: {data?.company_data?.contact_person}</p>
         </div>
@@ -130,6 +132,7 @@ export default function InvoiceTemplate({ data, invoices, copyLabel = "Original 
           <p><strong>{data?.company_data?.company_name}</strong></p>
           <p>{data?.company_data?.address}</p>
           {data?.company_data?.tax_registration && <p>GST No.- {data?.company_data?.tax_registration}</p>}
+          <p>Email: {data?.company_data?.email?.join(", ")}</p>
           <p>Phone Number: {data?.company_data?.phone?.join(", ")}</p>
           <p>Contact Person: {data?.company_data?.contact_person}</p>
         </div>
