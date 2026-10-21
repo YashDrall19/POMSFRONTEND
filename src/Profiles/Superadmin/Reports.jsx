@@ -356,6 +356,23 @@ export default function Reports() {
 		return false;
 	}
 
+	const searchPO = async(po_number) => {
+		const res = await dispatch(getData(urls.filters, {
+			filter: "purchaseorders",
+			fields: {po_number}
+		}));
+		if (res?.success) {
+			const vendor = vendors?.find(v => v?.id === res?.data[0]?.vendor_data?.id);
+			const company = companies?.find(c => c?.id === res?.data[0]?.company_data?.id);
+			setPIV({
+				...res?.data[0],
+				company_data: company,
+				vendor_data: vendor,
+			});
+			setShowModal(true);
+		}
+	};
+
   return (
     <div>
 			<div className="card mb-4 p-3">
@@ -529,12 +546,18 @@ export default function Reports() {
 				actionButton={<ExportExcel tableId="All Quotations" />}
 				actionHeaders={["Actions"]}
 				actionCells={(row) => [
-					<button className='btn btn-info' key={row?.po_number} onClick={() => {setShowModal(true);setPIV(row);}}>View</button>,
+					<button className='btn btn-info' key={row?.po_number} onClick={() => searchPO(row?.po_number)}>View</button>,
 					(user.role === "ADMIN" && <button className='btn btn-outline-success' key={row?.id} onClick={() => {setShowUpdate(true);setPIV(row);}}>Update Status</button>),
 					((isPIVGenerated(row?.po_number) || user.role === "ADMIN") &&
 						<button className='btn btn-secondary' key={row?.po_number} 
 							onClick={() => {
-								setPIV(row);
+								const vendor = vendors?.find(v => v?.id === row?.vendor_data?.id);
+								const company = companies?.find(c => c?.id === row?.company_data?.id);
+								setPIV({
+									...row,
+									company_data: company,
+									vendor_data: vendor,
+								});
 								isPIVGenerated(row?.po_number) ? setShowInvoice(true) : setShowConfirmation(true);
 							}}
 						>

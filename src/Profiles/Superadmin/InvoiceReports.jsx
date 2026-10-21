@@ -190,7 +190,13 @@ export default function InvoiceReports() {
       fields: {po_number}
     }));
     if (res?.success) {
-      setPIV(res?.data[0]);
+      const vendor = vendors?.find(v => v?.id === res?.data[0]?.vendor_data?.id);
+      const company = companies?.find(c => c?.id === res?.data[0]?.company_data?.id);
+      setPIV({
+        ...res?.data[0],
+        company_data: company,
+        vendor_data: vendor,
+      });
       setShowPIV(true);
     }
   };
@@ -201,11 +207,15 @@ export default function InvoiceReports() {
       fields: {po_number: invoice?.po_number}
     }));
     if (res?.success) {
+      const vendor = vendors?.find(v => v?.id === res?.data[0]?.vendor_data?.id);
+      const company = companies?.find(c => c?.id === res?.data[0]?.company_data?.id);
       const quotation = res?.data[0];
       // The invoice carries a snapshot of commercial values. Use it for the
       // printed invoice while retaining quotation-only address and terms data.
       setPIV({
         ...quotation,
+        company_data: company,
+        vendor_data: vendor,
         items: invoice?.items?.length ? invoice.items : quotation?.items,
         total_price: invoice?.total_price ?? quotation?.total_price,
         special_discount: invoice?.special_discount ?? quotation?.special_discount,
